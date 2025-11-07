@@ -4,11 +4,37 @@ const { ethers } = require("hardhat");
 
 describe("VotingContract", function () {
     async function Fixture1() {
+        // accounts = await ethers.getSigners();
+        // Эта строка получает список тестовых аккаунтов, которые Hardhat автоматически создаёт при запуске локальной сети.
+        // По умолчанию, Hardhat при запуске локальной сети создаёт 20 тестовых аккаунтов, каждый из которых имеет свой
+        // Ethereum-адрес и приватный ключ:
+        //
+        // accounts[0] → 0x5FbDB2315678afecb367f032d93F642f64180aa3
+        // accounts[1] → 0xAb8483F64d9C6d1EcF9b849Ae677dD3315835Cb2
+        // accounts[2] → 0x4B0897b0513fdc7C541B6d9D7E929C4e5364D2dB
+        // ...
         const accounts = await ethers.getSigners();
+
+        // getContractFactory("VotingContract") ищет скомпилированный артефакт из artifacts/ по имени VotingContract.
+        // Возвращает объект с методами .deploy(), .attach(), .connect() и т.д.
         VotingContract = await ethers.getContractFactory("VotingContract");
+
+        // Здесь мы деплоим контракт в локальную сеть Hardhat.
+        // Метод .deploy() — это фактически транзакция, которая создаёт новый контракт в сети.
+        // Аргументы (50, 5) — это параметры конструктора смарт-контракта VotingContract.
         const myVotingContract = await VotingContract.deploy(50, 5);
+
         let candidates = new Array();
+
+        // Создаём массив кандидатов.
+        // Пропускаем accounts[0], потому что это, скорее всего, владелец.
+        // Добавляем адреса accounts[1] → accounts[9] как кандидатов.
         for (i = 1; i < 10; i++) candidates.push(accounts[i].address);
+
+        // connect(accounts[0]) — говорит Hardhat: “выполни этот вызов от имени аккаунта №0”.
+        // .addVoting(180, candidates) — вызывает публичную функцию контракта.
+        // Скорее всего, 180 — это длительность голосования (в секундах), а candidates — список адресов кандидатов.
+        // Функция addVoting записывает в mapping Votings новую структуру с этими данными.
         await myVotingContract.connect(accounts[0]).addVoting(180, candidates);
         await myVotingContract.connect(accounts[0]).startVoting(0);
         return { myVotingContract, accounts };
